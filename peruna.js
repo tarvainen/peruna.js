@@ -17,6 +17,7 @@ Peruna.prototype.module = function (moduleName, data) {
 	if (el) {
 		this.el = el;
 		this.data = data;
+		this.preLoad();
 		this.log('Created module ' + moduleName + '.');
 		this.init(data);
 	} else {
@@ -38,10 +39,11 @@ Peruna.prototype.init = function () {
 
 	this.initBinds();
 	this.initClicks();
+	this.loaded();
 }
 
 Peruna.prototype.initBinds = function () {
-	var binds = document.querySelectorAll('[p-bind]');
+	var binds = this.el.querySelectorAll('[p-bind]');
 	var that = this;
 
 	for (var i = 0; i < binds.length; i++) {
@@ -71,6 +73,18 @@ Peruna.prototype.initClicks = function () {
 				that.data[param](e);
 			}
 		});
+	}
+}
+
+Peruna.prototype.loaded = function () {
+	if (typeof this.data.perunaLoaded == 'function') {
+		this.data.perunaLoaded();
+	}
+}
+
+Peruna.prototype.preLoad = function () {
+	if (typeof this.data.perunaPreLoad == 'function') {
+		this.data.perunaPreLoad();
 	}
 }
 
@@ -113,6 +127,38 @@ PerunaController.prototype.change = function (value) {
 PerunaController.prototype.dispatchUI = function (value) {
 	this.el.value = value;
 	this.el.innerHTML = value;
+}
+
+Peruna.prototype.http = function (opts) {
+	var method = opts.method || 'GET';
+	var sync = opts.sync || false;
+	var url = opts.url || '';
+	var data = opts.data || null;
+	var dataType = opts.dataType || 'json';
+
+	var xmlHttp = new XMLHttpRequest();
+	xmlHttp.onreadystatechange = function () {
+		if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
+			if (typeof opts.success == 'function') {
+				var data = xmlHttp.responseText;
+
+				switch (dataType) {
+					case 'json':
+						data = JSON.parse(data);
+						break;
+					case 'text':
+						break;
+					case 'xml':
+						break;
+				}
+
+				opts.success(data);
+			}
+		}
+	}
+
+	xmlHttp.open(method, url, true);
+	xmlHttp.send(data);
 }
 
 Object.defineProperty(Object.prototype, 'watch', {
