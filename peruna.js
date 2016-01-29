@@ -36,10 +36,14 @@ Peruna.prototype.init = function () {
 		return false;
 	}
 
+	this.initBinds();
+	this.initClicks();
+}
+
+Peruna.prototype.initBinds = function () {
 	var binds = document.querySelectorAll('[p-bind]');
 	var that = this;
 
-	testdata = this.data;
 	for (var i = 0; i < binds.length; i++) {
 		var controller = new PerunaController(this, binds[i], this.data);
 		var paramName = binds[i].getAttribute('p-bind');
@@ -52,6 +56,21 @@ Peruna.prototype.init = function () {
 		}
 
 		this.controllers[paramName].push(controller);
+	}
+}
+
+Peruna.prototype.initClicks = function () {
+	var clicks = document.querySelectorAll('[p-click]');
+	var that = this;
+
+	for (var i = 0; i < clicks.length; i++) {
+		var param = clicks[i].getAttribute('p-click');
+
+		clicks[i].addEventListener('click', function (e) {
+			if (typeof that.data[param] == 'function') {
+				that.data[param](e);
+			}
+		});
 	}
 }
 
