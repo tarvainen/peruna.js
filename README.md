@@ -4,7 +4,7 @@ The first no-bullshit JS framework. Super easy. Super lightweight.
 ## Usage
 
 ### Data binding
-Just include the peruna.js script to the HTML page and use the following syntax to create two-way data bindings between your data and controllers.
+Just include the peruna.js script to the HTML page and use the following syntax to create two-way data bindings between your data and controllers. Also the nested objects like obj.param1.param2 will work.
     <html>
 
     <head>
@@ -16,6 +16,11 @@ Just include the peruna.js script to the HTML page and use the following syntax 
 	    <div peruna="perunaApp"> <!-- Tell the module name in the peruna attribute -->
 		    <input type="text" p-bind="name"/> <!-- In the p-bind attribute tell your controller's name to Peruna -->
 		    <p p-bind="name"></p>
+		    
+		    <br>
+		    
+		    <input type="text" p-bind="user.name.first"/>
+		    <p p-bind="user.name.first"/>
 	    </div>
 
     </body>
@@ -27,7 +32,12 @@ Just include the peruna.js script to the HTML page and use the following syntax 
 If everything went right you should now be able to see the input data updating below inside the paragraph element. You may access to the variables through the JavaScript by creating a file named script.js and adding the following lines in to it.
 
     var app = peruna.module('perunaApp', {
-	    name: 'this will be the init text in the binded controller'
+	    name: 'this will be the init text in the binded controller',
+	    user: {
+	    	name: {
+	    		first: 'Kalervo'
+	    	}
+	    }
     });
 
 These will be the initialized values inside the controllers.
