@@ -50,11 +50,21 @@ Peruna.prototype.initBinds = function () {
 		var controller = new PerunaController(this, binds[i], this.data);
 		var paramName = binds[i].getAttribute('p-bind');
 
+		var obj = this.data;
+		var value = paramName;
+
+		if (paramName.indexOf('.') >= 0) {
+			var params = paramName.split('.');
+			value = params.pop();
+			var str = params.join('.');
+			obj = eval('this.data.' + str);
+		}
+
 		if (!this.controllers[paramName]) {
 			this.controllers[paramName] = [];
-			this.data.watch(paramName, function (prop, oldValue, value) {
-				that.dispatchUI(that.controllers[prop], value);
-			});
+			obj.watch(value, function (prop, oldValue, value, fullpath) {
+				that.dispatchUI(that.controllers[fullpath], value);
+			}, paramName);
 		}
 
 		this.controllers[paramName].push(controller);
@@ -93,7 +103,7 @@ var PerunaController = function (module, el, dataCollection, data) {
 	this.el = el;
 	this.paramName = el.getAttribute('p-bind');
 	this.dataCollection = dataCollection;
-	this.data = dataCollection[this.paramName];
+	this.data = eval('dataCollection.' + this.paramName);
 
 	el.addEventListener('change', this, false);
 	el.addEventListener('keyup', this, false);
@@ -105,7 +115,6 @@ var PerunaController = function (module, el, dataCollection, data) {
 }
 
 PerunaController.prototype.handleEvent = function (e) {
-	console.log(e);
 
 	switch (e.type) {
 		case 'change':
@@ -121,7 +130,15 @@ PerunaController.prototype.change = function (value) {
 	this.el.value = value;
 	this.el.innerHTML = value;
 	this.data = value;
-	this.dataCollection[this.paramName] = value;
+	if (this.paramName.indexOf('.') >= 0) {
+		var params = this.paramName.split('.');
+		var variable = params.pop();
+		var str = params.join('.');
+		var obj = eval('this.dataCollection.' + str);
+		obj[variable] = value;
+	} else {
+		this.dataCollection[this.paramName] = value;
+	}
 }
 
 PerunaController.prototype.dispatchUI = function (value) {
@@ -165,10 +182,11 @@ Object.defineProperty(Object.prototype, 'watch', {
 	enumerable: false,
 	configurable: true,
 	writable: false,
-	value: function (property, callback) {
+	value: function (property, callback, fullpath) {
+
 		var oldValue = this[property];
 		var newValue = oldValue;
-
+		
 		var getter = function () {
 			return newValue;
 		}
@@ -176,7 +194,7 @@ Object.defineProperty(Object.prototype, 'watch', {
 		var setter = function (value) {
 			oldValue = newValue;
 			newValue = value;
-			callback.call(this, property, oldValue, value);
+			callback.call(this, property, oldValue, value, fullpath);
 		}
 
 		if (delete this[property]) {
