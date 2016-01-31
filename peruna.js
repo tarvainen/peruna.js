@@ -37,38 +37,98 @@ Peruna.prototype.init = function () {
 		return false;
 	}
 
+	this.initStyles();
+	this.initAttrs();
+	this.initLoops();
 	this.initBinds();
 	this.initClicks();
 	this.loaded();
 }
 
-Peruna.prototype.initBinds = function () {
-	var binds = this.el.querySelectorAll('[p-bind]');
-	var that = this;
+Peruna.prototype.initStyles = function () {
+	var style = "[p-temp] { display: none; }";
+	var node = document.createElement('style');
+	node.innerHTML = style;
+	document.getElementsByTagName('head')[0].appendChild(node);
+}
 
-	for (var i = 0; i < binds.length; i++) {
-		var controller = new PerunaController(this, binds[i], this.data);
-		var paramName = binds[i].getAttribute('p-bind');
-
-		var obj = this.data;
-		var value = paramName;
-
-		if (paramName.indexOf('.') >= 0) {
-			var params = paramName.split('.');
-			value = params.pop();
-			var str = params.join('.');
-			obj = eval('this.data.' + str);
-		}
-
-		if (!this.controllers[paramName]) {
-			this.controllers[paramName] = [];
-			obj.watch(value, function (prop, oldValue, value, fullpath) {
-				that.dispatchUI(that.controllers[fullpath], value);
-			}, paramName);
-		}
-
-		this.controllers[paramName].push(controller);
+Peruna.prototype.initAttrs = function () {
+	var looped = this.el.querySelectorAll('p-loop > *');
+	for (var i = 0; i < looped.length; i++) {
+		looped[i].setAttribute('p-temp', '');
 	}
+}
+
+Peruna.prototype.initLoops = function () {
+	var loops = this.el.querySelectorAll('p-loop');
+	for (var i = 0; i < loops.length; i++) {
+		this.initLoop(loops[i]);
+	}
+}
+
+Peruna.prototype.initLoop = function (loop) {
+	var term = loop.getAttribute('for');
+	this.removeUnusedElements(loop);
+	var elements = loop.querySelectorAll('[p-temp]');
+
+	var termParts = term.split(' ');
+	var variableName = termParts[0];
+	var objName = termParts[2];
+
+	var obj = eval('this.data.' + objName);
+	console.log(obj);
+
+	var that = this;
+	this.data.watch(objName, function (prop, oldValue, value) {
+		that.initLoop(loop);
+	});
+
+	if (!obj) {
+		return;
+	}
+
+	for (var i = 0; i < obj.length; i++) {
+		for (var j = 0; j < elements.length; j++) {
+			var node = elements[j].cloneNode();
+			node.setAttribute('p-bind', 'posts[' + i + '].title');
+			node.removeAttribute('p-temp');
+			loop.appendChild(node);
+			this.initBind(node);
+		}
+	}
+
+}
+
+Peruna.prototype.initBinds = function () {
+	var binds = this.el.querySelectorAll('[p-bind]:not([p-temp])');
+	for (var i = 0; i < binds.length; i++) {
+		this.initBind(binds[i]);
+	}
+}
+
+Peruna.prototype.initBind = function (bind) {
+	var that = this;
+	var controller = new PerunaController(this, bind, this.data);
+	var paramName = bind.getAttribute('p-bind');
+
+	var obj = this.data;
+	var value = paramName;
+
+	if (paramName.indexOf('.') >= 0) {
+		var params = paramName.split('.');
+		value = params.pop();
+		var str = params.join('.');
+		obj = eval('this.data.' + str);
+	}
+
+	if (!this.controllers[paramName]) {
+		this.controllers[paramName] = [];
+		obj.watch(value, function (prop, oldValue, value, fullpath) {
+			that.dispatchUI(that.controllers[fullpath], value);
+		}, paramName);
+	}
+
+	this.controllers[paramName].push(controller);
 }
 
 Peruna.prototype.initClicks = function () {
@@ -97,6 +157,14 @@ Peruna.prototype.preLoad = function () {
 		this.data.perunaPreLoad();
 	}
 }
+
+Peruna.prototype.removeUnusedElements = function (loop) {
+	var removable = loop.querySelectorAll('*:not([p-temp])');
+	for (var i = 0; i < removable.length; i++) {
+		removable[i].remove();
+	}
+}
+
 
 var PerunaController = function (module, el, dataCollection, data) {
 	this.module = module;
