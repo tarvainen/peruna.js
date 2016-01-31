@@ -42,6 +42,35 @@ If everything went right you should now be able to see the input data updating b
 
 These will be the initialized values inside the controllers.
 
+### Using Peruna.js's loops
+You can easily show lots of data with Peruna.js's looping function. Create a HTML element p-loop and set it's for-value as you want. See the full example below.
+
+	<p-loop for="post in posts">
+		<h1 p-bind="post.title"></h1>
+		<p p-bind="post.content"></p>
+	</p-loop>
+
+After this kind of definition you have of course also to have an object array called posts inside your Peruna module. You can copypaste the data below for testing purposes.
+
+	var app = peruna.module('perunaApp', {
+		posts: [
+			{
+				title: 'The first commit',
+				content: 'Some content of the first post here'
+			}, 
+			{
+				title: 'My second post',
+				content: 'Hey there again! This will be my second post'
+			}, 
+			{
+				title: 'My third post',
+				content: 'Houhou. Here we go again!'
+			}
+		]
+	});
+	
+Now you should see titles as h1-elements and contents as paragraph elements on your webpage.
+
 ### Click events
 You can attach Peruna.js click events to your PerunaControllers. Just use p-click-attribute to tell the Peruna.js which function you would like to be run when the element is clicked.
 
