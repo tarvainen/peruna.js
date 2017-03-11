@@ -1,3 +1,9 @@
+# DEPRECATED
+
+Development of this library has been ended decades ago. Please don't use this bullshit anymore. Pull requests and issues will be just ignored because I simply have no time for this. 
+
+Package from the npm will not be removed.
+
 # peruna.js
 The first no-bullshit JS framework. Super easy. Super lightweight.
 
